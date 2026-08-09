@@ -734,12 +734,13 @@ docker compose up -d db
 The project has several levels of testing.
 
 | Test Class                 | What It Tests                                                                                       |
-| -------------------------- | --------------------------------------------------------------------------------------------------- |
+|----------------------------|-----------------------------------------------------------------------------------------------------|
 | `Base62Test`               | Base62 conversion, known values, URL-safe output, 10,000 unique codes, and `Long.MAX_VALUE`         |
 | `UrlValidatorTest`         | URL schemes, missing hosts, `user@host`, private IP ranges, and addresses just outside those ranges |
 | `UrlRepositoryTest`        | Database uniqueness and case-sensitive short codes                                                  |
 | `UrlServiceTest`           | Real database behavior, generated codes, and shortening the same URL twice                          |
 | `UrlControllerTest`        | HTTP status codes, headers, and JSON responses using a mocked service                               |
+| `ShortenerIntegrationTest` | Overall integration tests with real HTTP calls                                                      |
 
 # Known Limitations
 
