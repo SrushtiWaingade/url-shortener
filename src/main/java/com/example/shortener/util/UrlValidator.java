@@ -1,5 +1,7 @@
 package com.example.shortener.util;
 
+import com.example.shortener.exception.InvalidUrlException;
+
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.Set;
@@ -22,27 +24,27 @@ public final class UrlValidator {
         try {
             uri = new URI(url);
         } catch (URISyntaxException e) {
-            throw new IllegalArgumentException("not a valid URL");
+            throw new InvalidUrlException("not a valid URL");
         }
 
         String scheme = uri.getScheme();
         if (scheme == null
                 || !(scheme.equalsIgnoreCase("http") || scheme.equalsIgnoreCase("https"))) {
-            throw new IllegalArgumentException("only http and https URLs are allowed");
+            throw new InvalidUrlException("only http and https URLs are allowed");
         }
 
         String host = uri.getHost();
         if (host == null || host.isBlank()) {
-            throw new IllegalArgumentException("URL must have a host");
+            throw new InvalidUrlException("URL must have a host");
         }
 
         // https://paypal.com@evil.com looks like paypal but goes to evil.com
         if (uri.getUserInfo() != null) {
-            throw new IllegalArgumentException("URLs containing user info are not allowed");
+            throw new InvalidUrlException("URLs containing user info are not allowed");
         }
 
         if (isLocalOrPrivate(host)) {
-            throw new IllegalArgumentException("URLs pointing at local or private addresses "
+            throw new InvalidUrlException("URLs pointing at local or private addresses "
                     + "are not allowed");
         }
     }

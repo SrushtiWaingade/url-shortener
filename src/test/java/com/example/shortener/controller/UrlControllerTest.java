@@ -1,17 +1,22 @@
 package com.example.shortener.controller;
 
 import com.example.shortener.entity.Url;
+import com.example.shortener.exception.AliasAlreadyExistsException;
+import com.example.shortener.exception.ApiExceptionHandler;
+import com.example.shortener.exception.InvalidUrlException;
 import com.example.shortener.service.UrlService;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
+import org.springframework.context.annotation.Import;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 
 import java.util.Optional;
 
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -20,6 +25,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @WebMvcTest(UrlController.class)
+@Import(ApiExceptionHandler.class)
 class UrlControllerTest {
 
     @Autowired
@@ -46,12 +52,53 @@ class UrlControllerTest {
     }
 
     @Test
-    @DisplayName("missing url returns 400")
+    @DisplayName("missing url returns 400 with a message")
     void missingUrlReturns400() throws Exception {
         mockMvc.perform(post("/shorten")
                         .contentType("application/json")
                         .content("{}"))
-                .andExpect(status().isBadRequest());
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.error").value("url is required"));
+    }
+
+    @Test
+    @DisplayName("invalid url returns 400 with the reason")
+    void invalidUrlReturns400() throws Exception {
+        when(service.shorten(any(), any()))
+                .thenThrow(new InvalidUrlException("only http and https URLs are allowed"));
+
+        mockMvc.perform(post("/shorten")
+                        .contentType("application/json")
+                        .content("""
+                                {"url": "ftp://example.com"}
+                                """))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.error").value("only http and https URLs are allowed"));
+    }
+
+    @Test
+    @DisplayName("taken alias returns 409")
+    void takenAliasReturns409() throws Exception {
+        when(service.shorten(any(), eq("my-link")))
+                .thenThrow(new AliasAlreadyExistsException("my-link"));
+
+        mockMvc.perform(post("/shorten")
+                        .contentType("application/json")
+                        .content("""
+                                {"url": "https://example.com", "alias": "my-link"}
+                                """))
+                .andExpect(status().isConflict())
+                .andExpect(jsonPath("$.error").value("alias 'my-link' is already taken"));
+    }
+
+    @Test
+    @DisplayName("malformed json returns 400")
+    void malformedJsonReturns400() throws Exception {
+        mockMvc.perform(post("/shorten")
+                        .contentType("application/json")
+                        .content("{not json"))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.error").value("request body is missing or malformed"));
     }
 
     @Test

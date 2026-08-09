@@ -7,13 +7,16 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.dao.DataIntegrityViolationException;
+import com.example.shortener.exception.AliasAlreadyExistsException;
+import com.example.shortener.exception.InvalidUrlException;
 import org.springframework.transaction.annotation.Transactional;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
-
+// Real database rather than mocks. The interesting part of this service is
+// "insert, read the generated id back, update" — mocking the repository would
+// only test the mock.
 @SpringBootTest
 @Transactional
 class UrlServiceTest {
@@ -67,7 +70,7 @@ class UrlServiceTest {
         service.shorten("https://example.com/first", "taken-alias");
 
         assertThatThrownBy(() -> service.shorten("https://example.com/second", "taken-alias"))
-                .isInstanceOf(DataIntegrityViolationException.class);
+                .isInstanceOf(AliasAlreadyExistsException.class);
     }
 
     @Test
@@ -91,7 +94,7 @@ class UrlServiceTest {
         long before = repository.count();
 
         assertThatThrownBy(() -> service.shorten("javascript:alert(1)", null))
-                .isInstanceOf(IllegalArgumentException.class);
+                .isInstanceOf(InvalidUrlException.class);
 
         assertThat(repository.count()).isEqualTo(before);
     }

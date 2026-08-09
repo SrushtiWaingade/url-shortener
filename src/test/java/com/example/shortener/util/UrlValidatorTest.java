@@ -1,5 +1,6 @@
 package com.example.shortener.util;
 
+import com.example.shortener.exception.InvalidUrlException;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
@@ -35,7 +36,7 @@ class UrlValidatorTest {
     @DisplayName("rejects anything that isn't an http or https url")
     void rejectsNonHttpUrls(String url) {
         assertThatThrownBy(() -> UrlValidator.validate(url))
-                .isInstanceOf(IllegalArgumentException.class);
+                .isInstanceOf(InvalidUrlException.class);
     }
 
     @ParameterizedTest
@@ -46,7 +47,7 @@ class UrlValidatorTest {
     @DisplayName("rejects urls with user info")
     void rejectsUserInfo(String url) {
         assertThatThrownBy(() -> UrlValidator.validate(url))
-                .isInstanceOf(IllegalArgumentException.class);
+                .isInstanceOf(InvalidUrlException.class);
     }
 
     @ParameterizedTest
@@ -57,7 +58,7 @@ class UrlValidatorTest {
             "http://172.16.0.1",
             "http://172.31.255.255",
             "http://192.168.1.1",
-            "http://169.254.169.254/latest/meta-data",
+            "http://169.254.169.254/latest/meta-data",   // cloud metadata
             "http://0.0.0.0",
             "http://db.internal/health",
             "http://printer.local"
@@ -65,7 +66,7 @@ class UrlValidatorTest {
     @DisplayName("rejects local and private addresses")
     void rejectsPrivateAddresses(String url) {
         assertThatThrownBy(() -> UrlValidator.validate(url))
-                .isInstanceOf(IllegalArgumentException.class);
+                .isInstanceOf(InvalidUrlException.class);
     }
 
     @ParameterizedTest
