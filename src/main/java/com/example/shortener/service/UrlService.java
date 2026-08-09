@@ -3,6 +3,7 @@ package com.example.shortener.service;
 import com.example.shortener.entity.Url;
 import com.example.shortener.repository.UrlRepository;
 import com.example.shortener.util.Base62;
+import com.example.shortener.util.UrlValidator;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -18,6 +19,7 @@ public class UrlService {
 
     @Transactional
     public Url shorten(String originalUrl, String alias) {
+        UrlValidator.validate(originalUrl);
 
         return alias != null && !alias.isBlank() ? saveWithAlias(originalUrl, alias) : saveWithGeneratedCode(originalUrl);
     }
