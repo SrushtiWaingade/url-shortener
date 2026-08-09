@@ -21,9 +21,7 @@ class UrlRepositoryTest {
     @Test
     @DisplayName("saves a url and finds it by code")
     void savesAndFindsByShortCode() {
-        Url url = new Url("https://example.com/some/path");
-        url.setShortCode("abc123");
-        repository.saveAndFlush(url);
+        save("abc123", "https://example.com/some/path");
 
         assertThat(repository.findByShortCode("abc123"))
                 .get().extracting(Url::getOriginalUrl)
@@ -39,13 +37,8 @@ class UrlRepositoryTest {
     @Test
     @DisplayName("same url can have several codes")
     void allowsTheSameUrlToBeStoredTwice() {
-        Url first = new Url("https://example.com");
-        first.setShortCode("code1");
-        repository.saveAndFlush(first);
-
-        Url second = new Url("https://example.com");
-        second.setShortCode("code2");
-        repository.saveAndFlush(second);
+        save("code1", "https://example.com");
+        save("code2", "https://example.com");
 
         assertThat(repository.findByShortCode("code1")).isPresent();
         assertThat(repository.findByShortCode("code2")).isPresent();
@@ -54,13 +47,8 @@ class UrlRepositoryTest {
     @Test
     @DisplayName("codes are case sensitive")
     void shortCodesAreCaseSensitive() {
-        Url lower = new Url("https://example.com/lower");
-        lower.setShortCode("aB92x");
-        repository.saveAndFlush(lower);
-
-        Url upper = new Url("https://example.com/upper");
-        upper.setShortCode("Ab92X");
-        repository.saveAndFlush(upper);
+        save("aB92x", "https://example.com/lower");
+        save("Ab92X", "https://example.com/upper");
 
         assertThat(repository.findByShortCode("aB92x"))
                 .get().extracting(Url::getOriginalUrl)
@@ -74,14 +62,18 @@ class UrlRepositoryTest {
     @Test
     @DisplayName("duplicate code is rejected")
     void rejectsDuplicateShortCode() {
-        Url first = new Url("https://example.com");
-        first.setShortCode("taken");
-        repository.saveAndFlush(first);
+        save("taken", "https://example.com");
 
         Url second = new Url("https://different.com");
         second.setShortCode("taken");
 
         assertThatThrownBy(() -> repository.saveAndFlush(second))
                 .isInstanceOf(DataIntegrityViolationException.class);
+    }
+
+    private void save(String code, String originalUrl) {
+        Url url = new Url(originalUrl);
+        url.setShortCode(code);
+        repository.saveAndFlush(url);
     }
 }

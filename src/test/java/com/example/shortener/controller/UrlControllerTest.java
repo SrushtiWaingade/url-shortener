@@ -9,8 +9,11 @@ import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 
+import java.util.Optional;
+
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
@@ -86,6 +89,26 @@ class UrlControllerTest {
                                 """))
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.code").value("git-hub"));
+    }
+
+    @Test
+    @DisplayName("known code redirects with 301")
+    void redirectsWithMovedPermanently() throws Exception {
+        when(service.findOriginalUrl("4c92"))
+                .thenReturn(Optional.of("https://example.com/a/long/path?x=1"));
+
+        mockMvc.perform(get("/4c92"))
+                .andExpect(status().isMovedPermanently())
+                .andExpect(header().string("Location", "https://example.com/a/long/path?x=1"));
+    }
+
+    @Test
+    @DisplayName("unknown code returns 404")
+    void unknownCodeReturns404() throws Exception {
+        when(service.findOriginalUrl(any())).thenReturn(Optional.empty());
+
+        mockMvc.perform(get("/nope"))
+                .andExpect(status().isNotFound());
     }
 
     private Url url(String code, String originalUrl) {

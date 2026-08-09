@@ -71,6 +71,21 @@ class UrlServiceTest {
     }
 
     @Test
+    @DisplayName("round trip: shorten then look up the code")
+    void roundTrip() {
+        Url saved = service.shorten("https://example.com/find-me", null);
+
+        assertThat(service.findOriginalUrl(saved.getShortCode()))
+                .contains("https://example.com/find-me");
+    }
+
+    @Test
+    @DisplayName("unknown code returns empty")
+    void unknownCodeReturnsEmpty() {
+        assertThat(service.findOriginalUrl("does-not-exist")).isEmpty();
+    }
+
+    @Test
     @DisplayName("invalid url is rejected before anything is saved")
     void rejectsInvalidUrl() {
         long before = repository.count();

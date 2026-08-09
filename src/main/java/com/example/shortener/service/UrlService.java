@@ -7,6 +7,8 @@ import com.example.shortener.util.UrlValidator;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.Optional;
+
 
 @Service
 public class UrlService {
@@ -22,6 +24,11 @@ public class UrlService {
         UrlValidator.validate(originalUrl);
 
         return alias != null && !alias.isBlank() ? saveWithAlias(originalUrl, alias) : saveWithGeneratedCode(originalUrl);
+    }
+
+    @Transactional(readOnly = true)
+    public Optional<String> findOriginalUrl(String code){
+        return repository.findByShortCode(code).map(Url::getOriginalUrl);
     }
 
     private Url saveWithAlias(String originalUrl, String alias) {
