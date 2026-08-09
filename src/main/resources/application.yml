@@ -1,0 +1,13 @@
+spring:
+  application:
+    name: shortener
+
+  datasource:
+    url: jdbc:mysql://${DB_HOST:localhost}:3306/shortener
+    username: app
+    password: app
+
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    open-in-view: false
